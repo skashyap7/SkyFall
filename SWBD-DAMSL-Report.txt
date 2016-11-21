@@ -1,0 +1,75 @@
+Assignment 3 Report
+
+Name: Suman Kashyap
+
+1. If you included files other than baseline_crf.py, advanced_crf.py, evaluate_model.py, and hw3_corpus_tool.py, or modified hw3_corpus_tool.py please describe what the files do and/or your modifications to hw3_corpus_tool.py.
+
+I have written an additional script called util.py used to seperate data into
+"dev" and "training". util.py expects a input directory which has all the csv
+files and a percentage. The parameter of percentage is useful to defining the 
+split % of dev and training data. 
+
+The script creates two directories called 'dev' and 'train' in the current working
+directory and copies % files into train and (100-%) files in dev directory
+
+2. Describe how you evaluated your baseline and advanced features
+
+As suggested, I used 4 features for baseline.
+    - Speaker change
+    - Beginning of Conversation / or not
+    - Words in the utterance
+    - POS of the corresponding words
+
+I evaluate the model by running evaluate.py on the dev directory and passing the 
+output file dumped by baseline.py. The split into dev and train is done by util.py
+For every document, I compare the sequence of labels. In case the corresponding
+labels mismatch, it is counted as wrong labelling else correct. The accuracy is calculated
+as 
+
+    % Accuracy = ( no. of current labels)*100/( Total no. of labels)
+
+Precision and recall is also calcuated similary.
+
+For advanced features,I selected multiple enhancements over the baseline
+    - A feature for previous and next token for every token in an utterance
+    - A feature for tokens in the previous utterance
+    - A feature for combination of tokens in an utterance
+        for. e.g. if tokens are 'a','b','c' and 'd' the considering
+        'ab','bc','cd' ...and likewise
+
+    All these features can be enabled or disabled from the cmdline. By default
+    all features are extracted.
+
+Using evaluate.py as for Baseline, the precision, accuracy and recall is calculated
+
+Additional tweaks to parameters for trainer was also made. 
+    c1 is set to 2.5 and iterations to 120 (for Baseline) and 75 (for Advanced)
+
+    
+3. Describe your advanced feature set.
+
+For advanced features,I selected multiple enhancements over the baseline
+    - A feature for previous and next token for every token in an utterance
+    - A feature for tokens in the previous utterance
+    - A feature for combination of tokens in an utterance
+        for. e.g. if tokens are 'a','b','c' and 'd' the considering
+        'ab','bc','cd' ...and likewise
+
+4. If you tried alternate advanced feature sets, please describe them.
+
+    As mentioned all the feature sets can be enabled and disabled. There are
+    impacts by enabling/disabling each feature. However, the impact is mostly
+    independent of other feature being present or absent. This conclusion has been 
+    reached by extensive testing through permutations of (enable/disable).
+
+    Largely, it is noticed that enabling the feature set of combination of tokens in
+    the utterance had no effect on the result.
+
+    Feature for tokens in previous utterance jumps the accuracy by about 1% and a minimal
+    is also contributed by feature for previous and next token.
+
+
+5. Accuracy of baseline features was: 73.04% (locally) and 70.04% (on vocareum)
+
+
+6. Accuracy of advanced features was: 72.80% (on vocareum)
