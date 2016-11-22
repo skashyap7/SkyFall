@@ -69,7 +69,7 @@ def extractFeatures(utterance, prev_speaker, prev_pos):
     if prev_pos:
         for x in prev_pos:
             feature.append("token[-1]=TOKEN_"+x.token+"=True")
-    return ([feature],speaker, utterance.pos)
+    return (feature,speaker, utterance.pos)
 
 def generateFeatures(corpus_iter):
     #for dlg_file in corpus_iter:
@@ -80,17 +80,22 @@ def generateFeatures(corpus_iter):
     for utterance in corpus_iter:
         feat,prev_speaker,prev_pos = extractFeatures(utterance, prev_speaker, prev_pos)
         features.append(feat)
-        labels.append([utterance.act_tag])
+        labels.append(utterance.act_tag)
     return features,labels
 
 
 def trainCRF(dirname):
+    feature_list = []
+    label_list = []
     dialog_filenames = sorted(glob.glob(os.path.join(dirname, "*.csv")))
     for dialog_filename in dialog_filenames:
         utteranceList =  corpus_reader.get_utterances_from_filename(dialog_filename)
         features,labels = generateFeatures(utteranceList)
-        for xseq,yseq in zip(features,labels):
-            trainer.append(xseq,yseq)
+        feature_list.extend(features)
+        label_list.extend(labels)
+        #for xseq,yseq in zip(features,labels):
+        #    trainer.append(xseq,yseq)
+    trainer.append(feature_list,label_list)
     trainer.train('seq_labeling.crfsuite')
     print(len(trainer.logparser.iterations), trainer.logparser.iterations[-1])
 
@@ -103,9 +108,9 @@ def tagCRF(dirname):
         utteranceList =  corpus_reader.get_utterances_from_filename(dialog_filename)
         features,labels = generateFeatures(utteranceList)
         tag_info[dialog_filename] = []
-        for f in features:
-            label = tagger.tag(f)
-            tag_info[dialog_filename].append(label)
+        #for f in features:
+        label = tagger.tag(features)
+        tag_info[dialog_filename] = label
     return tag_info
 
 def __extract_filename(filepath):
@@ -117,7 +122,7 @@ def print_results(outfile, tagged_data):
         file_name = __extract_filename(f)
         labels = "\n"
         for x in tagged_data[f]:
-            labels += x[0]+"\n"
+            labels += x+"\n"
         text_str += "Filename=\""+file_name+"\""
         text_str += labels+"\n"
     with open(outfile,"w") as result:

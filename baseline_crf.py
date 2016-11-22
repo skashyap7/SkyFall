@@ -36,11 +36,10 @@ def extractFeatures(utterance, prev_speaker):
         for token in utterance.pos:
             #if token.token not in stopwords:
             feature.append("pos=POS_"+token.pos)
-
     else:
         feature.append("token=TOKEN_None")
         feature.append("pos=POS_None")
-    return ([feature],speaker)
+    return (feature,speaker)
 
 def generateFeatures(corpus_iter):
     #for dlg_file in corpus_iter:
@@ -50,19 +49,23 @@ def generateFeatures(corpus_iter):
     for utterance in corpus_iter:
         feat,prev_speaker = extractFeatures(utterance, prev_speaker)
         features.append(feat)
-        labels.append([utterance.act_tag])
+        labels.append(utterance.act_tag)
     #print(features,labels)
     return features,labels
 
 
 def trainCRF(dirname):
+    feature_list = []
+    label_list = []
     dialog_filenames = sorted(glob.glob(os.path.join(dirname, "*.csv")))
     for dialog_filename in dialog_filenames:
         utteranceList =  corpus_reader.get_utterances_from_filename(dialog_filename)
         features,labels = generateFeatures(utteranceList)
-        #trainer.append(features,labels)
-        for xseq,yseq in zip(features,labels):
-            trainer.append(xseq,yseq)
+        feature_list.extend(features)
+        label_list.extend(labels)
+        #for xseq,yseq in zip(features,labels):
+        #    trainer.append(xseq,yseq)
+    trainer.append(feature_list,label_list)
     trainer.train('seq_labeling.crfsuite')
 
 def tagCRF(dirname):
@@ -75,9 +78,11 @@ def tagCRF(dirname):
         utteranceList =  corpus_reader.get_utterances_from_filename(dialog_filename)
         features,labels = generateFeatures(utteranceList)
         tag_info[dialog_filename] = []
-        for f in features:
-            label = tagger.tag(f)
-            tag_info[dialog_filename].append(label)
+        #for f in features:
+        label = tagger.tag(features)
+        #print(label)
+        #break
+        tag_info[dialog_filename]= label
     return tag_info
 
 def __extract_filename(filepath):
@@ -89,7 +94,7 @@ def print_results(outfile, tagged_data):
         file_name = __extract_filename(f)
         labels = "\n"
         for x in tagged_data[f]:
-            labels += x[0]+"\n"
+            labels += x+"\n"
         text_str += "Filename=\""+file_name+"\""
         text_str += labels+"\n"
     with open(outfile,"w") as result:
